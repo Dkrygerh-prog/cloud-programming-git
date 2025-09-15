@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Nedtællingsur</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    #countdown { font-size: 48px; margin: 20px; }
+    #message { font-size: 24px; margin: 20px; color: darkblue; }
+    button { margin: 10px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Nedtællingsur</h1>
+  
+  <div id="countdown">00:00</div>
+  <div id="message">{{ message }}</div>
+
+  <input type="number" id="minutes" placeholder="Minutter">
+  <button onclick="startCountdown()">Start nedtælling</button>
+  <button onclick="toggleSound()">? Slå lyd fra/til</button>
+
+  <audio id="alertSound">
+    <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+  </audio>
+
+  <script>
+    let countdownInterval;
+    let soundEnabled = true;
+
+    function startCountdown() {
+      let minutes = document.getElementById("minutes").value;
+      let seconds = minutes * 60;
+      
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        let m = Math.floor(seconds / 60);
+        let s = seconds % 60;
+        document.getElementById("countdown").innerText = 
+            String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+        
+        if (seconds === 60 && soundEnabled) {
+          document.getElementById("alertSound").play();
+        }
+
+        if (seconds <= 0) {
+          clearInterval(countdownInterval);
+        }
+        seconds--;
+      }, 1000);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      alert("Lyd er nu " + (soundEnabled ? "TIL" : "FRA"));
+    }
+
+    // Poll besked fra serveren hvert 3. sekund
+    setInterval(() => {
+      fetch(window.location.href)
+        .then(resp => resp.text())
+        .then(html => {
+          let parser = new DOMParser();
+          let doc = parser.parseFromString(html, "text/html");
+          let newMessage = doc.getElementById("message").innerText;
+          document.getElementById("message").innerText = newMessage;
+        });
+    }, 3000);
+  </script>
+</body>
+</html>
