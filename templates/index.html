@@ -4,68 +4,73 @@
   <meta charset="UTF-8">
   <title>Nedtællingsur</title>
   <style>
-    body { font-family: Trebuchet, sans-serif; text-align: center; margin-top: 50px; }
-    #countdown { font-size: 148px; margin: 20px; }
-    #message { font-size: 124px; margin: 20px; color: darkblue; }
-    button { margin: 10px; padding: 10px; }
+    body {
+      font-family: "Trebuchet MS", sans-serif;
+      background-color: #00008b;   /* mørkeblå */
+      color: #ffd700;              /* gul tekst */
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 64px;
+      margin-top: 50px;
+    }
+
+    #timer {
+      font-size: 96px;
+      font-weight: bold;
+      margin: 40px 0;
+    }
+
+    #message {
+      font-size: 36px;
+      margin: 20px;
+    }
   </style>
 </head>
 <body>
   <h1>Nedtællingsur</h1>
-  
-  <div id="countdown">00:00</div>
-  <div id="message">{{ message }}</div>
+  <div id="timer">30:00</div>
+  <div id="message">🔔 Klar til start...</div>
 
-  <input type="number" id="minutes" placeholder="Minutter">
-  <button onclick="startCountdown()">Start nedtælling</button>
-  <button onclick="toggleSound()">🔊 Slå lyd fra/til</button>
-
+  <!-- Lyd: her indsætter du URL til din lydfil -->
   <audio id="alertSound">
     <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+    Din browser understøtter ikke lydafspilning.
   </audio>
 
   <script>
-    let countdownInterval;
-    let soundEnabled = true;
+    let countdown;
+    let totalMinutes = 30;  // <-- ændr her for at sætte nedtællingstid
+    let seconds = totalMinutes * 60;
 
     function startCountdown() {
-      let minutes = document.getElementById("minutes").value;
-      let seconds = minutes * 60;
-      
-      clearInterval(countdownInterval);
-      countdownInterval = setInterval(() => {
+      countdown = setInterval(() => {
+        seconds--;
+
         let m = Math.floor(seconds / 60);
         let s = seconds % 60;
-        document.getElementById("countdown").innerText = 
-            String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
-        
-        if (seconds === 60 && soundEnabled) {
+
+        document.getElementById("timer").innerText =
+          `${m}:${s < 10 ? "0" : ""}${s}`;
+
+        // --- Lyd afspilles 60 sekunder før slut ---
+        if (seconds === 60) {
           document.getElementById("alertSound").play();
         }
 
+        // --- Når tiden er gået ---
         if (seconds <= 0) {
-          clearInterval(countdownInterval);
+          clearInterval(countdown);
+          document.getElementById("timer").innerText = "Tiden er gået!";
         }
-        seconds--;
       }, 1000);
     }
 
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      alert("Lyd er nu " + (soundEnabled ? "TIL" : "FRA"));
-    }
-
-    // Poll besked fra serveren hvert 3. sekund
-    setInterval(() => {
-      fetch(window.location.href)
-        .then(resp => resp.text())
-        .then(html => {
-          let parser = new DOMParser();
-          let doc = parser.parseFromString(html, "text/html");
-          let newMessage = doc.getElementById("message").innerText;
-          document.getElementById("message").innerText = newMessage;
-        });
-    }, 3000);
+    // Starter automatisk når siden indlæses
+    window.onload = startCountdown;
   </script>
 </body>
 </html>
